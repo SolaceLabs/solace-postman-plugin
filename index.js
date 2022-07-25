@@ -1,131 +1,227 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const commander = require('commander');
-const path = require('path');
-const AsyncAPI = require('./util/asyncAPI');
-const PostmanCollection = require("./util/postmanCollections")
+const fs = require("fs");
+const commander = require("commander");
+const path = require("path");
+const AsyncAPI = require("./util/asyncAPI");
+//const PostmanCollection = require("./util/postmanCollections");
+const EventPortal = require("../eventportal_wrapper/src/index");
+const ep = new EventPortal();
+const pmCollection = require("postman-collection");
+const jsf = require("json-schema-faker");
 
-function main() {
+async function main() {
   // Parse command line args
   commander
-    .name('async-to-postman -f <asyncAPIFile> ')
-    .description('This CLI takes in an asyncapi spec file and creates a postman collections to send POST requests on the Solace PubSub+ REST port')
-    .version('1.0.0', '-v, --version')
-    .usage('[OPTIONS]...')
-    .requiredOption('-f, --file <value>', 'Required: AsyncAPI spec file')
-    .option('-h, --host  <host>:<port>', 'Solace PubSub+ Broker host:port','http://localhost:9000')
-    .option('-u, --user <username>:<password>', 'Solace PubSub+ Broker username:password.', 'default:default')
-    .option('-s, --semp <username>:<password>', 'Solace PubSub+ Broker SEMP admin:admin.')
-    .option('-o, --output <file/location/name.json>', 'Output file name. By default: <asyncAPIFileName_collections>')
+    .name("ep-to-postman")
+    .description(
+      "This CLI takes in an asyncapi spec file and creates a postman collections to send POST requests on the Solace PubSub+ REST port"
+    )
+    .version("1.0.0", "-v, --version")
+    .usage("[OPTIONS]...")
+    .requiredOption(
+      "-a, --applicationName <applicationName>",
+      "The name of the Event Portal Application"
+    )
+    .requiredOption(
+      "-av, --applicationVersion <version>",
+      "The version of the Event Portal Application"
+    )
+    .option(
+      "-h, --host  <protocol>://<host>:<port>",
+      "Solace PubSub+ Broker host:port",
+      "http://localhost:9000"
+    )
+    .option(
+      "-u, --user <username>:<password>",
+      "Solace PubSub+ Broker username:password.",
+      "default:default"
+    )
+    .option(
+      "-s, --semp <username>:<password>",
+      "Solace PubSub+ Broker SEMP admin:admin."
+    )
+    .option(
+      "-o, --output <file/location/name.json>",
+      "Output file name. By default: <asyncAPIFileName_collections>"
+    )
     .parse(process.argv);
-  
-  const options = commander.opts()
-  
+
+  const options = commander.opts();
+
   // Todo: validate if -f file exists
   // const sempUser = options.semp ? options.semp.split(":")[0] : undefined
   // const sempPass = options.semp ? options.semp.split(":")[1] : undefined
-  
-  var outputFile = options.output ? options.output : path.basename(options.file, path.extname(options.file)).replace(/\s/g, "") + "_Collections.json"
-  
-  var asyncAPIFile = JSON.parse(fs.readFileSync(options.file))
-  const ap = new AsyncAPI(asyncAPIFile)
-  var pc = new PostmanCollection(require("./util/EDACollections-template.json"))
-  
-  requests = []
-  // Dereference all $refs in file
-  ap.deref_schema().then((schema) => {
-    ap.getPublishEvents(schema).map(event => {
-      var path = ap.generatePath(event)
-      // Fill in the requests in the postman collection definition file
-      item = {
-        "name": ap.getName(event),
-        "request": {
-          "method": "POST",
-          "header": [],
-          "url": {
-            "raw": `{{SolaceHost}}:{{SolacePort}}/${path}`,
-            "protocol": "http",
-            "host": [
-              "{{SolaceHost}}"
-            ],
-            "port": "{{SolacePort}}",
-            "path": path.split("/"),
-          },
-           "body": {
-            "mode": "raw",
-            "raw": ap.generateBody(event)
-          }
+
+  var outputFile = options.output
+    ? options.output
+    : "output" + "_Collections.json";
+
+  const applicationIds = await ep.getApplicationIDs(options.applicationName);
+
+  if (applicationIds.length == 0) {
+    console.error("No application found with name: " + options.applicationName);
+    return;
+  }
+
+  // Take the first applicaiton id
+  const applicationId = applicationIds[0];
+
+  // Get the application version id
+  const applicationVersion = await ep.getApplicationVersionObject(
+    applicationId,
+    options.applicationVersion
+  );
+
+  if (applicationVersion === null) {
+    console.error(
+      "No application version found with name: " + options.applicationVersion
+    );
+    return;
+  }
+
+  if (applicationVersion.declaredConsumedEventVersionIds.length == 0) {
+    console.info(
+      "Nothing to do. No declared consumed event version found for application version: " +
+        options.applicationVersion
+    );
+    return;
+  }
+
+  // Get the declarede consumed event version ids
+  const declaredConsumedEventVersionIds =
+    applicationVersion.declaredConsumedEventVersionIds;
+
+  // Start building the collection
+  const myCollection = {
+    info: {
+      name: options.applicationName,
+      description: applicationVersion.description,
+      schema:
+        "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      version: "0.1.0",
+    },
+    item: [],
+  };
+
+  // Get the event and schema
+  for (const eventVersionId of declaredConsumedEventVersionIds) {
+    console.log("eventVersionId", eventVersionId);
+    const eventVersion = await ep.getEventVersionObject(eventVersionId);
+    let schemaVersionObject = null;
+    if (eventVersion.schemaVersionId !== null) {
+        schemaVersionObject = await ep.getSchemaVersionObject(eventVersion.schemaVersionId);
+    }
+
+    const item = await createItem(eventVersion, schemaVersionObject);
+    myCollection.item.push(item);
+  }
+
+  // Add on the SEMP host and port
+  if (options.host !== null) {
+    myCollection.variable = [
+      {
+        key: "SolaceHost",
+        value: options.host.split("://")[1].split(":")[0],
+        type: "string",
+      },
+      {
+        key: "SolacePort",
+        value: options.host.split(":")[2],
+        type: "string",
+      },
+      {
+        key: "SolaceProtocol",
+        value: options.host.split("://")[0],
+        type: "string",
+      },
+    ];
+  }
+
+  // Add on the SEMP credentials
+  if (options.user !== null) {
+    myCollection.auth = {
+		type: "basic",
+		basic: [
+			{
+				key: "username",
+				value: options.user.split(":")[0],
+                type: "string"
+			},
+			{
+				key: "password",
+				value: options.user.split(":")[1],
+				type: "string"
+			}
+		]
+	}
+  }
+  console.log(JSON.stringify(myCollection, null, 2));
+  fs.writeFile(outputFile, JSON.stringify(myCollection, null, 2), err => {})
+
+}
+
+// Create each item in the collection
+async function createItem(eventVersion, schemaVersion) {
+  const requestName = await ep.getEventName(eventVersion.eventId);
+
+  const path = eventVersion.deliveryDescriptor.address.addressLevels.map(
+    (level) =>
+      level.addressLevelType === "literal" ? level.name : `:${level.name}`
+  );
+
+  const apiEndpoint = `{{SolaceProtocol}}://{{SolaceHost}}:{{SolacePort}}/${path.join(
+    "/"
+  )}`;
+
+  const jsonSchema = JSON.parse(schemaVersion.content);
+
+  const item = {
+    name: `${requestName}`,
+
+    event: [
+      {
+        listen: "test",
+        script: {
+          exec: [
+            "//Check status",
+            'tests["Expected status code - " + responseCode.code + " CREATED"] = responseCode.code === 200;',
+          ],
+          type: "text/javascript",
         },
-        "response": []
-      }
-      requests.push(item)
-    })
-  
-    // if (sempUser && sempPass) {
-    //   requests.push(addSempCalls())
-    // }
-    
-    // Fill in PC
-    pc.addTitle(ap.getTitle())
-    pc.addDescription(ap.getDescription())
-    pc.addItems(requests)
-    pc.addHost(options.host)
-    pc.addUser(options.user)
-    // Write out the collections file
-    fs.writeFile(outputFile, JSON.stringify(pc.getPC(),null, 2), err => {})
-    console.log(`Postman collection created and found in ${outputFile}`)
-  
-  }).catch((error) => {
-    this.log(error)
-  })
-  
-  // function addSempCalls() {
-  //   return [
-  //       {
-  //       "name": ap.getName(event),
-  //       "request": {
-  //         "method": "POST",
-  //         "header": [],
-  //         "url": {
-  //           "raw": `{{SolaceHost}}:{{SolacePort}}/${topic}`,
-  //           "protocol": "http",
-  //           "host": [
-  //             "{{SolaceHost}}"
-  //           ],
-  //           "port": "{{SolacePort}}",
-  //           "path": topic.split("/"),
-  //         },
-  //         "body": {
-  //           "mode": "raw",
-  //           "raw": ap.getBody(event)
-  //         }
-  //       },
-  //       "response": []
-  //     },
-  //     {
-  //       "name": ap.getName(event),
-  //       "request": {
-  //         "method": "POST",
-  //         "header": [],
-  //         "url": {
-  //           "raw": `{{SolaceHost}}:{{SolacePort}}/${topic}`,
-  //           "protocol": "http",
-  //           "host": [
-  //             "{{SolaceHost}}"
-  //           ],
-  //           "port": "{{SolacePort}}",
-  //           "path": topic.split("/"),
-  //         },
-  //         "body": {
-  //           "mode": "raw",
-  //           "raw": ap.getBody(event)
-  //         }
-  //       },
-  //       "response": []
-  //     }
-  //   ]
-  // }
+      },
+    ],
+
+    request: {
+      header: [
+        {
+          key: "Content-Type",
+          value: "application/json",
+        },
+      ],
+      url: {
+        raw: apiEndpoint,
+        protocol: "{{SolaceProtocol}}",
+        host: ["{{SolaceHost}}"],
+        port: "{{SolacePort}}",
+        path: path,
+      },
+      method: "POST",
+      body: {
+        mode: "raw",
+        raw: generateBody(jsonSchema),
+      },
+      auth: null,
+    },
+
+    response: [],
+  };
+  return item;
+}
+
+// Returns the body to be used in the REST request
+function generateBody(bodySchema) {
+  return JSON.stringify(jsf.generate(bodySchema), null, 2);
 }
 
 if (require.main === module) {
