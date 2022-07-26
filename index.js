@@ -3,11 +3,8 @@
 const fs = require("fs");
 const commander = require("commander");
 const path = require("path");
-const AsyncAPI = require("./util/asyncAPI");
-//const PostmanCollection = require("./util/postmanCollections");
 const EventPortal = require("../eventportal_wrapper/src/index");
 const ep = new EventPortal();
-const pmCollection = require("postman-collection");
 const jsf = require("json-schema-faker");
 
 async function main() {
@@ -15,7 +12,7 @@ async function main() {
   commander
     .name("ep-to-postman")
     .description(
-      "This CLI takes in an asyncapi spec file and creates a postman collections to send POST requests on the Solace PubSub+ REST port"
+      "This CLI takes in an event portal application and creates a postman collections to send POST requests on the Solace PubSub+ REST port"
     )
     .version("1.0.0", "-v, --version")
     .usage("[OPTIONS]...")
@@ -38,24 +35,16 @@ async function main() {
       "default:default"
     )
     .option(
-      "-s, --semp <username>:<password>",
-      "Solace PubSub+ Broker SEMP admin:admin."
-    )
-    .option(
       "-o, --output <file/location/name.json>",
-      "Output file name. By default: <asyncAPIFileName_collections>"
+      "Output file name. By default: <application_collections>"
     )
     .parse(process.argv);
 
   const options = commander.opts();
 
-  // Todo: validate if -f file exists
-  // const sempUser = options.semp ? options.semp.split(":")[0] : undefined
-  // const sempPass = options.semp ? options.semp.split(":")[1] : undefined
-
   var outputFile = options.output
     ? options.output
-    : "output" + "_Collections.json";
+    : "application" + "_Collections.json";
 
   const applicationIds = await ep.getApplicationIDs(options.applicationName);
 
