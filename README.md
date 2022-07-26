@@ -7,6 +7,7 @@ This utility connects to the Solace Event Portal collects the consumers for an a
 1. git clone https://github.com/SolaceLabs/ep-api-wrapper.git
 1. git clone https://github.com/gregmeldrum/ep-to-postman.git
 1. cd ep-api-wrapper
+1. git checkout greg-ep-to-postman
 1. npm install
 1. cd ../ep-to-postman
 1. npm install
