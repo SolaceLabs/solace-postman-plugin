@@ -1,10 +1,10 @@
 {
-  "name": "@solace-community/asyncapi-to-postman",
+  "name": "@solace-community/ep-to-postman",
   "version": "1.0.2",
-  "description": "This CLI tool takes in an asyncapi file and converts it to a postman collection",
+  "description": "This CLI tool converts a Solace Event Portal application version into a postman collection",
   "main": "index.js",
   "bin": {
-    "asyncapi-to-postman": "index.js"
+    "ep-to-postman": "index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
