@@ -17,12 +17,14 @@ This utility connects to the Solace Event Portal collects the consumers for an a
 Below are the following options
 
 | Flag          | Description                                                | Type                    | Default                          |
-| ------------- | ---------------------------------------------------------- | ----------------------- | -------------------------------- |
-| -v, --version | Outputs the version number                                 |                         |                                  |
-| -h, --host    | Destination Solace PubSub+ Broker in the form of host:port | `<host>:<port>`         | `http://localhost:9000`          |
-| -u, --user    | Destination Solace PubSub+ Broker username:password        | `<username>:<password>` | `default:default`                |
-| -o, --output  | Destination Solace PubSub+ Broker SEMP credentials         |                         | `<application_collections>` |
-| --help        | Output file name                                           |                         |                                  |
+| --------------------- | ---------------------------------------------------------- | ----------------------- | -------------------------------- |
+| -v, --version         | Outputs the version number                                 |                         |                                  |
+| -a, --applicationName | The target application in Event Portal                     |                         |                                  |
+| -av, --applicationVer | The target application version in Event Portal             |                         |                                  |
+| -h, --host            | Destination Solace PubSub+ Broker in the form of host:port | `<host>:<port>`         | `http://localhost:9000`          |
+| -u, --user            | Destination Solace PubSub+ Broker username:password        | `<username>:<password>` | `default:default`                |
+| -o, --output          | Destination Solace PubSub+ Broker SEMP credentials         |                         | `<application_collections>` |
+| --help                | Output file name                                           |                         |                                  |
 
 ## Development
 
