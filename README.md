@@ -5,7 +5,7 @@ This utility connects to the Solace Event Portal collects the consumers for an a
 ## How to run
 
 1. git clone https://github.com/gregmeldrum/ep-to-postman.git
-1. cd ../ep-to-postman
+1. cd ep-to-postman
 1. npm install
 1. export SOLACE_CLOUD_TOKEN="my solace cloud token"
 1. node index.js -a "My Applicaiton Name" -av 0.1.0 -o my_postman_collection.json
