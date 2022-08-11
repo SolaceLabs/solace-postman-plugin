@@ -14,7 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^9.0.9",
-    "@solace-community/eventportal": "^1.2.1",
+    "@solace-community/eventportal": "^1.4.0",
     "commander": "^9.1.0",
     "fs": "0.0.1-security",
     "json-schema-faker": "^0.5.0-rcv.42",

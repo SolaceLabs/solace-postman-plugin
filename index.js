@@ -3,8 +3,7 @@
 const fs = require("fs");
 const commander = require("commander");
 const path = require("path");
-const EventPortal = require("../eventportal_wrapper/src/index");
-//const EventPortal = require("@solace-community/eventportal");
+const EventPortal = require("@solace-community/eventportal");
 const ep = new EventPortal();
 const jsf = require("json-schema-faker");
 jsf.option('useDefaultValue', true);

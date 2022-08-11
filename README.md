@@ -4,11 +4,7 @@ This utility connects to the Solace Event Portal collects the consumers for an a
 
 ## How to run
 
-1. git clone https://github.com/SolaceLabs/ep-api-wrapper.git
 1. git clone https://github.com/gregmeldrum/ep-to-postman.git
-1. cd ep-api-wrapper
-1. git checkout greg-ep-to-postman
-1. npm install
 1. cd ../ep-to-postman
 1. npm install
 1. export SOLACE_CLOUD_TOKEN="my solace cloud token"
@@ -16,15 +12,15 @@ This utility connects to the Solace Event Portal collects the consumers for an a
 
 Below are the following options
 
-| Flag          | Description                                                | Type                    | Default                          |
-| --------------------- | ---------------------------------------------------------- | ----------------------- | -------------------------------- |
-| -v, --version         | Outputs the version number                                 |                         |                                  |
-| -a, --applicationName | The target application in Event Portal                     |                         |                                  |
-| -av, --applicationVer | The target application version in Event Portal             |                         |                                  |
-| -h, --host            | Destination Solace PubSub+ Broker in the form of host:port | `<host>:<port>`         | `http://localhost:9000`          |
-| -u, --user            | Destination Solace PubSub+ Broker username:password        | `<username>:<password>` | `default:default`                |
-| -o, --output          | Destination Solace PubSub+ Broker SEMP credentials         |                         | `<application_collections>` |
-| --help                | Output file name                                           |                         |                                  |
+| Flag          | Description                                                        | Type                         | Default                          |
+| --------------------- | ---------------------------------------------------------- | ---------------------------- | -------------------------------- |
+| -v, --version         | Outputs the version number                                 |                              |                                  |
+| -a, --applicationName | The target application in Event Portal                     |                              |                                  |
+| -av, --applicationVer | The target application version in Event Portal             |                              |                                  |
+| -h, --host            | Destination Solace PubSub+ Broker in the form of host:port | `<protocol>://<host>:<port>` | `https://mroyppj81pus7.messaging.solace.cloud:9443` |
+| -u, --user            | Destination Solace PubSub+ Broker username:password        | `<username>:<password>`      | `default:default`                |
+| -o, --output          | Destination Solace PubSub+ Broker SEMP credentials         |                              | `<application_collections>`      |
+| --help                | Output file name                                           |                              |                                  |
 
 ## Development
 
