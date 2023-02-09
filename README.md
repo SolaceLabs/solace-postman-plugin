@@ -2,6 +2,8 @@
 
 This utility connects to the Solace Event Portal collects the consumers for an application version and outputs a Postman collections file that can then be imported to Postman. Note that the events are converted to POST requests sent to the Solace PubSub+ broker on the REST Port.
 
+This repository contains one way of using Event Portal with other tools. Check out the [Supercharge your Software Development Lifecycle with PubSub+ Event Portal](https://solace.com/blog/software-development-lifecycle-with-event-portal) blog to learn about other ways you can use Event Portal to throughout your SDLC. 
+
 ## How to run
 
 1. git clone https://github.com/gregmeldrum/ep-to-postman.git
