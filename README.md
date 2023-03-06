@@ -6,7 +6,7 @@ This repository contains one way of using Event Portal with other tools. Check o
 
 ## How to run
 
-1. git clone https://github.com/gregmeldrum/ep-to-postman.git
+1. git clone https://github.com/SolaceLabs/ep-to-postman.git
 1. cd ep-to-postman
 1. npm install
 1. export SOLACE_CLOUD_TOKEN="my solace cloud token"
