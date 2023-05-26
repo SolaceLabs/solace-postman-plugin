@@ -1,4 +1,4 @@
-# EP to Postman Collections
+# Solace Postman Plugin
 
 This utility connects to the Solace Event Portal collects the consumers for an application version and outputs a Postman collections file that can then be imported to Postman. Note that the events are converted to POST requests sent to the Solace PubSub+ broker on the REST Port.
 
